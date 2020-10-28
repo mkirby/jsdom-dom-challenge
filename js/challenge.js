@@ -1,86 +1,74 @@
-const counter = document.querySelector("h1#counter")
-// let count = parseInt(counter.textContent)
-const minus = document.querySelector("#minus")
-const plus = document.querySelector("#plus")
-const heart = document.querySelector("#heart")
-const pause = document.querySelector("#pause")
+// DOM ELEMENTS
+const counterContainer = document.querySelector("h1#counter")
 const likesContainer = document.querySelector("ul.likes")
-let incNumber;
+const buttonGroup = document.querySelector("#buttons-group")
+const allButtons = document.querySelectorAll("button")
+//submit comments not started
+const submitButton = document.querySelector("#submit")
+let paused = false
+let count = 0
+let likedNumbers = {}
+let intervalID;
 
-document.addEventListener('DOMContentLoaded', function(){
-    incrementOn(true)
-})
+// EVENT LISTENERS
 
-function incrementOn(boolean) {
-    
-    if(boolean) {
-         incNumber =  setInterval(function(){
-            let count = parseInt(counter.textContent)
-            counter.textContent = count + 1
-        },1000)
-    } else {
-        clearInterval(incNumber)
+document.addEventListener('DOMContentLoaded', () => { incrementOn(true) })
+buttonGroup.addEventListener("click", event => {
+    if (event.target.matches("#minus")) {
+        changeCount(-1)
+    } else if (event.target.matches("#plus")) {
+        changeCount(1)
+    } else if (event.target.matches("#heart")) {
+        likeANumber()
+    } else if (event.target.matches("#pause")) {
+        togglePause()
     }
-}
-
-minus.addEventListener("click", function(){
-    let count = parseInt(counter.textContent)
-    counter.textContent = count - 1
 })
 
-plus.addEventListener("click", function(){
-    let count = parseInt(counter.textContent)
-    counter.textContent = count + 1
-})
+// EVENT HANDLERS
 
-heart.addEventListener("click", likeANumber)
-
-function likeANumber(event) {
-    let count = parseInt(counter.textContent)
-    if (likesContainer.querySelector(`li[data-num='${count}']`)){
+function likeANumber() {
+    //if the number has been liked before
+    if (likedNumbers[count]){
+        likedNumbers[count] += 1
         const listItem = likesContainer.querySelector(`li[data-num='${count}']`)
-        const likes = parseInt(listItem.querySelector("span").textContent)
-        listItem.querySelector("span").textContent = likes + 1
+        listItem.innerHTML = `${count} has been liked <span>${likedNumbers[count]}</span> times`
+    //if the number hasn't been liked before
     } else {
-        let likedNumber =  document.createElement("li")
-        likedNumber.dataset.num = count
-        likedNumber.innerHTML = `
-        ${count} has been liked 
-        <span> 1 </span>
-        times
-        `
-    
-        likesContainer.append(likedNumber)
-    
+        likedNumbers[count] = 1
+        let likedLi =  document.createElement("li")
+        likedLi.dataset.num = count
+        likedLi.innerHTML = `${count} has been liked <span>1</span> time`
+        likesContainer.append(likedLi)
     }
 }
-
-pause.addEventListener("click", togglePause)
 
 function togglePause(event) {
-    if (pause.innerText === "pause"){
-        minus.disabled = true
-        plus.disabled = true
-        heart.disabled = true
-        pause.innerText = "resume"
-        incrementOn(false)
+    paused = !paused
+    incrementOn(!paused)
+    allButtons.forEach(btn => {
+        if (btn.innerText != "pause") {
+            btn.disabled = paused
+        }
+    })
+    if (paused) {
+        document.querySelector("#pause").innerText = "resume"
     } else {
-        minus.disabled = false
-        plus.disabled = false
-        heart.disabled = false
-        pause.innerText = "pause" 
-        incrementOn(true)
+        document.querySelector("#pause").innerText = "pause" 
     }
-
 }
 
-// As a user, I should see the timer increment every second once the page has loaded.✅
-// As a user, I can manually increment and decrement the counter using the plus and minus buttons. ✅
-// As a user, I can 'like' an individual number of the counter. I should see count of the number of 'likes'
-// associated with that number. ✅
-// As a user, I can pause the counter, which should
-// pause the counter
-// disable all buttons except the pause button
-// the pause button should then show the text "resume."
-// When 'resume' is clicked, it should restart the counter and re-enable the buttons.✅
-//  5. As a user, I can leave comments on my gameplay, such as: "Wow, what a fun game this is."
+function incrementOn(boolean) {
+    if(boolean) {
+        intervalID =  setInterval(function(){
+            changeCount(1)
+        },1000)
+    } else {
+        clearInterval(intervalID)
+    }
+}
+
+function changeCount(value) {
+    count = count + value
+    counterContainer.textContent = count
+}
